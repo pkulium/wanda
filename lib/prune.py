@@ -170,6 +170,7 @@ def prune_wanda(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0
                 # structured n:m sparsity
                 for ii in range(W_metric.shape[1]):
                     if ii % prune_m == 0:
+                        tmp = W_metric[:,ii:(ii+prune_m)].float()
                         W_mask.scatter_(1,ii+torch.topk(tmp, prune_n,dim=1, largest=False)[1], True)
             else:
                 sort_res = torch.sort(W_metric, dim=-1, stable=True)
