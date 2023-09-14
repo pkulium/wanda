@@ -210,7 +210,7 @@ def prune_wanda(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0
     torch.cuda.empty_cache()
 
 
-def prune_combine(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0, prune_m=0):
+def prune_mixed(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0, prune_m=0):
     use_cache = model.config.use_cache 
     model.config.use_cache = False 
 
