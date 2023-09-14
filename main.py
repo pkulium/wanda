@@ -5,7 +5,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from importlib.metadata import version
 
-from lib.prune import prune_wanda, prune_magnitude, prune_sparsegpt, check_sparsity, find_layers
+from lib.prune import prune_wanda, prune_magnitude, prune_sparsegpt, check_sparsity, find_layers, prune_combine
 from lib.eval import eval_ppl
 
 print('torch', version('torch'))
@@ -68,6 +68,9 @@ def main():
             prune_magnitude(args, model, tokenizer, device, prune_n=prune_n, prune_m=prune_m)
         elif args.prune_method == "sparsegpt":
             prune_sparsegpt(args, model, tokenizer, device, prune_n=prune_n, prune_m=prune_m)
+        elif args.prune_method == "combine":
+            prune_sparsegpt(args, model, tokenizer, device, prune_n=prune_n, prune_m=prune_m)
+
 
     ################################################################
     print("*"*30)
