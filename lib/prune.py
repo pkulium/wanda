@@ -112,6 +112,7 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
         for name in subset:
             W = subset[name].weight.data 
             W_metric = torch.abs(W)
+            
             if prune_n != 0:
                 W_mask = (torch.zeros_like(W)==1)
                 for ii in range(W_metric.shape[1]):
