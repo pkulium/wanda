@@ -111,19 +111,44 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
 
         for name in subset:
             W = subset[name].weight.data 
-            W_metric = torch.abs(W)
-            
-            if prune_n != 0:
-                W_mask = (torch.zeros_like(W)==1)
-                for ii in range(W_metric.shape[1]):
-                    if ii % prune_m == 0:
-                        tmp = W_metric[:,ii:(ii+prune_m)].float()
-                        W_mask.scatter_(1,ii+torch.topk(tmp, prune_n,dim=1, largest=False)[1], True)
-            else:
-                thresh = torch.sort(W_metric.flatten().cuda())[0][int(W.numel()*args.sparsity_ratio)].cpu()
-                W_mask = (W_metric<=thresh)
+            # W_metric = torch.abs(W)
 
-            W[W_mask] = 0
+            # if prune_n != 0:
+            #     W_mask = (torch.zeros_like(W)==1)
+            #     for ii in range(W_metric.shape[1]):
+            #         if ii % prune_m == 0:
+            #             tmp = W_metric[:,ii:(ii+prune_m)].float()
+            #             W_mask.scatter_(1,ii+torch.topk(tmp, prune_n,dim=1, largest=False)[1], True)
+            # else:
+            #     thresh = torch.sort(W_metric.flatten().cuda())[0][int(W.numel()*args.sparsity_ratio)].cpu()
+            #     W_mask = (W_metric<=thresh)
+
+            # W[W_mask] = 0
+            # Assuming w, a, and b are given matrices
+            import torch
+            m, n = W.shape
+            r, k = 16, 16
+            # Given matrices
+            w = W
+            a = torch.rand(r, n)
+            b = torch.rand(k, n)
+
+            # Concatenate a and b horizontally
+            c = torch.cat((a, b), dim=0)
+
+            # Solve for w1 and w2 using least squares
+            w_combined, _ = torch.lstsq(w, c)
+            w1 = w_combined[:r, :]
+            w2 = w_combined[r:r+k, :]
+            criterion = nn.MSELoss()
+
+            loss = criterion(w1, w2)
+
+
+
+
+            
+
 
 def prune_wanda(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0, prune_m=0):
     use_cache = model.config.use_cache 
