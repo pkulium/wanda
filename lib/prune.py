@@ -178,7 +178,7 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
             b = torch.rand(k, n, dtype=W.dtype).to('cuda:0')
 
             # Compute pseudo-inverse of a
-            a_pseudo_inv = torch.pinverse(a.t())
+            a_pseudo_inv = torch.pinverse(a.to(torch.float32)).to(W.dtype)
 
             # Compute w1
             w1 = torch.mm(W, a_pseudo_inv)
@@ -187,7 +187,7 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
             residual = W - torch.mm(w1, a)
 
             # Compute pseudo-inverse of b
-            b_pseudo_inv = torch.pinverse(b.t())
+            b_pseudo_inv = torch.pinverse(b.to(torch.float32)).to(W.dtype)
 
             # Compute w2
             w2 = torch.mm(residual, b_pseudo_inv)
