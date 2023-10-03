@@ -130,11 +130,11 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
             r, k = 16, 16
             # Given matrices
             w = W
-            a = torch.rand(r, n)
-            b = torch.rand(k, n)
+            a = torch.rand(r, n).to('cuda:0')
+            b = torch.rand(k, n).to('cuda:0')
 
             # Concatenate a and b horizontally
-            c = torch.cat((a, b), dim=0)
+            c = torch.cat((a, b), dim=0).to('cuda:0')
 
             # Solve for w1 and w2 using least squares
             w_combined, _ = torch.linalg.lstsq(w, c)
