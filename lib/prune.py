@@ -125,25 +125,46 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
 
             # W[W_mask] = 0
             # Assuming w, a, and b are given matrices
-            import torch
+            import torch.nn as nn
+            import torch.optim as optim
+
+            # Assuming you have the matrices w, a, and b defined as before
+
+            # Define the model
+            class MatrixFactorization(nn.Module):
+                def __init__(self, m, r, k, n):
+                    super(MatrixFactorization, self).__init__()
+                    self.w1 = nn.Parameter(torch.randn(m, r))
+                    self.w2 = nn.Parameter(torch.randn(m, k))
+                    
+                def forward(self, a, b):
+                    return torch.mm(self.w1, a) + torch.mm(self.w2, b)
+
             m, n = W.shape
             r, k = 16, 16
-            # Given matrices
-            w = W
-            a = torch.rand(r, n, dtype = w.dtype).to('cuda:0')
-            b = torch.rand(k, n, dtype = w.dtype).to('cuda:0')
+            model = MatrixFactorization(m, r, k, n)
+            a = torch.rand(r, n)
+            b = torch.rand(k, n)
 
-            # Concatenate a and b horizontally
-            c = torch.cat((a, b), dim=0).to('cuda:0')
-
-            # Solve for w1 and w2 using least squares
-            w_combined, _ = torch.linalg.lstsq(w, c)
-            w1 = w_combined[:r, :]
-            w2 = w_combined[r:r+k, :]
+            # Define loss and optimizer
             criterion = nn.MSELoss()
+            optimizer = optim.Adam(model.parameters(), lr=0.01)
 
-            loss = criterion(w1, w2)
-            print(f'loss {loss}')
+            # Training loop
+            epochs = 1000
+            for epoch in range(epochs):
+                optimizer.zero_grad()
+                output = model(a, b)
+                loss = criterion(output.t(), W)
+                loss.backward()
+                optimizer.step()
+                
+                if epoch % 100 == 0:
+                    print(f"Epoch {epoch}, Loss: {loss.item()}")
+
+            # After training, w1 and w2 can be accessed as:
+            w1_learned = model.w1.detach()
+            w2_learned = model.w2.detach()
 
 
 
