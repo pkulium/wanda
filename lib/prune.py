@@ -224,7 +224,7 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
             r, k = 16, 16
             dtype = W.dtype
             a = torch.rand(m, r, dtype=dtype).to('cuda:0')
-            b = torch.linalg.lstsq(a.to(torch.float32), W.to(torch.float32), driver='gelsd').solution.to(dtype)
+            b = torch.linalg.lstsq(a.to(torch.float32), W.to(torch.float32), driver='gels').solution.to(dtype)
             w0 = a.mm(b)
             subset[name].weight.data = w0
             criterion = nn.MSELoss()
