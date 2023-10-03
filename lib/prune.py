@@ -199,37 +199,39 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
             # subset[name].weight.data = w0
 
 
-            # import torch
-            # m, n = W.shape
-            # r, k = 16, 16
-            # # Given matrices
-            # a = torch.rand(r, n, dtype=W.dtype).to('cuda:0')
-            # b = torch.rand(k, n, dtype=W.dtype).to('cuda:0')
-
-            # # Concatenate a and b horizontally
-            # c = torch.cat((a, b), dim=0)
-
-            # # Solve for w1 and w2 using least squares
-            # w_combined, _ = torch.linalg.lstsq(W, c)
-            # w1 = w_combined[:r, :]
-            # w2 = w_combined[r:r+k, :]
-            # w0 = w1.mm(a) + w2.mm(b)
-            # subset[name].weight.data = w0
-            # criterion = nn.MSELoss()
-            # loss = criterion(w0, W)
-            # print(f'loss: {loss}')
-
             import torch
             m, n = W.shape
             r, k = 16, 16
             dtype = W.dtype
-            a = torch.rand(m, r, dtype=dtype).to('cuda:0')
-            b = torch.linalg.lstsq(a.to(torch.float32), W.to(torch.float32), driver='gels').solution.to(dtype)
-            w0 = a.mm(b)
+            # Given matrices
+            a = torch.rand(r, n, dtype=W.dtype).to('cuda:0')
+            b = torch.rand(k, n, dtype=W.dtype).to('cuda:0')
+
+            # Concatenate a and b vertically
+            c = torch.cat((a.t(), b.t()), dim=0)
+
+            # Solve for w1 and w2 using least squares
+            w_combined, _ = torch.lstsq(W.t().to(torch.float32), c.to(torch.float32)).to(dtype)
+            w1 = w_combined[:, :r].t()
+            w2 = w_combined[:, r:].t()
+            w0 = w1.mm(a) + w2.mm(b)
             subset[name].weight.data = w0
             criterion = nn.MSELoss()
             loss = criterion(w0, W)
             print(f'loss: {loss}')
+
+
+            # import torch
+            # m, n = W.shape
+            # r, k = 16, 16
+            # dtype = W.dtype
+            # a = torch.rand(m, r, dtype=dtype).to('cuda:0')
+            # b = torch.linalg.lstsq(a.to(torch.float32), W.to(torch.float32)).solution.to(dtype)
+            # w0 = a.mm(b)
+            # subset[name].weight.data = w0
+            # criterion = nn.MSELoss()
+            # loss = criterion(w0, W)
+            # print(f'loss: {loss}')
 
 
         
