@@ -192,7 +192,8 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
             # Compute w2
             w2 = torch.mm(residual, b_pseudo_inv)
             criterion = nn.MSELoss()
-            loss = criterion(W, w1.mm(a) + w2.mm(b))
+            w0 = w1.mm(a) + w2.mm(b)
+            loss = criterion(W, w0)
 
 
 
