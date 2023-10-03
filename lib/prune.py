@@ -145,7 +145,7 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
             model = MatrixFactorization(m, r, k, n, dtype=W.dtype).to('cuda:0')
             model.train()
             a = torch.rand(r, n, dtype=W.dtype).to('cuda:0')
-            b = torch.rand(k, n, dtype=W.dtype)
+            b = torch.rand(k, n, dtype=W.dtype).to('cuda:0')
 
             # Define loss and optimizer
             criterion = nn.MSELoss()
