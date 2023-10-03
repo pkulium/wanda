@@ -127,92 +127,95 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
 
 
 
-            import torch
+            # import torch
 
-            # Given matrices
+            # # Given matrices
+            # m, n = W.shape
+            # r, k =32, 32
+            # a = torch.rand(r, n, dtype=W.dtype).to('cuda:0')
+            # b = torch.rand(k, n, dtype=W.dtype).to('cuda:0')
+
+            # # Compute pseudo-inverse of a
+            # a_pseudo_inv = torch.pinverse(a.to(torch.float32)).to(W.dtype)
+
+            # # Compute w1
+            # w1 = torch.mm(W, a_pseudo_inv)
+
+            # # Compute residual
+            # residual = W - torch.mm(w1, a)
+
+            # # Compute pseudo-inverse of b
+            # b_pseudo_inv = torch.pinverse(b.to(torch.float32)).to(W.dtype)
+
+            # # Compute w2
+            # w2 = torch.mm(residual, b_pseudo_inv)
+            # # criterion = nn.MSELoss()
+            # # w0 = w1.mm(a) + w2.mm(b)
+
+
+            # # Assuming w, a, and b are given matrices
+            # import torch.nn as nn
+            # import torch.optim as optim
+
+            # # Define the model
+            # class MatrixFactorization(nn.Module):
+            #     def __init__(self, m, r, k, n, dtype):
+            #         super(MatrixFactorization, self).__init__()
+            #         self.w1 = nn.Parameter(torch.randn(m, r, dtype = dtype))
+            #         self.w2 = nn.Parameter(torch.randn(m, k, dtype = dtype))
+                    
+            #     def forward(self, a, b):
+            #         return torch.mm(self.w1, a) + torch.mm(self.w2, b)
+
+            # m, n = W.shape
+            # r, k = 16, 16
+            # model = MatrixFactorization(m, r, k, n, dtype=W.dtype).to('cuda:0')
+            # model.w1.data = w1.data
+            # model.w2.data = w2.data
+            # model.train()
+            # # a = torch.rand(r, n, dtype=W.dtype).to('cuda:0')
+            # # b = torch.rand(k, n, dtype=W.dtype).to('cuda:0')
+            # # Define loss and optimizer
+            # criterion = nn.MSELoss()
+            # optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+            # # Training loop
+            # epochs = 1000
+            # for epoch in range(epochs):
+            #     optimizer.zero_grad()
+            #     output = model(a, b)
+            #     loss = criterion(output, W)
+            #     loss.backward()
+            #     optimizer.step()
+                
+            #     if epoch == 0 or epoch == epochs - 1:
+            #         print(f"Epoch {epoch}, Loss: {loss.item()}")
+
+            # # After training, w1 and w2 can be accessed as:
+            # w1_learned = model.w1.detach()
+            # w2_learned = model.w2.detach()
+
+            # w0 = w1_learned.mm(a) + w2_learned.mm(b)
+            # subset[name].weight.data = w0
+
+
+            import torch
             m, n = W.shape
-            r, k =32, 32
+            r, k = 16, 16
+            # Given matrices
             a = torch.rand(r, n, dtype=W.dtype).to('cuda:0')
             b = torch.rand(k, n, dtype=W.dtype).to('cuda:0')
 
-            # Compute pseudo-inverse of a
-            a_pseudo_inv = torch.pinverse(a.to(torch.float32)).to(W.dtype)
+            # Concatenate a and b horizontally
+            c = torch.cat((a, b), dim=0)
 
-            # Compute w1
-            w1 = torch.mm(W, a_pseudo_inv)
-
-            # Compute residual
-            residual = W - torch.mm(w1, a)
-
-            # Compute pseudo-inverse of b
-            b_pseudo_inv = torch.pinverse(b.to(torch.float32)).to(W.dtype)
-
-            # Compute w2
-            w2 = torch.mm(residual, b_pseudo_inv)
-            # criterion = nn.MSELoss()
-            # w0 = w1.mm(a) + w2.mm(b)
-
-
-            # Assuming w, a, and b are given matrices
-            import torch.nn as nn
-            import torch.optim as optim
-
-            # Define the model
-            class MatrixFactorization(nn.Module):
-                def __init__(self, m, r, k, n, dtype):
-                    super(MatrixFactorization, self).__init__()
-                    self.w1 = nn.Parameter(torch.randn(m, r, dtype = dtype))
-                    self.w2 = nn.Parameter(torch.randn(m, k, dtype = dtype))
-                    
-                def forward(self, a, b):
-                    return torch.mm(self.w1, a) + torch.mm(self.w2, b)
-
-            m, n = W.shape
-            r, k = 16, 16
-            model = MatrixFactorization(m, r, k, n, dtype=W.dtype).to('cuda:0')
-            model.w1.data = w1.data
-            model.w2.data = w2.data
-            model.train()
-            # a = torch.rand(r, n, dtype=W.dtype).to('cuda:0')
-            # b = torch.rand(k, n, dtype=W.dtype).to('cuda:0')
-            # Define loss and optimizer
-            criterion = nn.MSELoss()
-            optimizer = optim.Adam(model.parameters(), lr=0.01)
-
-            # Training loop
-            epochs = 1000
-            for epoch in range(epochs):
-                optimizer.zero_grad()
-                output = model(a, b)
-                loss = criterion(output, W)
-                loss.backward()
-                optimizer.step()
-                
-                if epoch == 0 or epoch == epochs - 1:
-                    print(f"Epoch {epoch}, Loss: {loss.item()}")
-
-            # After training, w1 and w2 can be accessed as:
-            w1_learned = model.w1.detach()
-            w2_learned = model.w2.detach()
-
-            w0 = w1_learned.mm(a) + w2_learned.mm(b)
+            # Solve for w1 and w2 using least squares
+            w_combined, _ = torch.linalg.lstsq(W, c)
+            w1 = w_combined[:r, :]
+            w2 = w_combined[r:r+k, :]
+            w0 = w1.mm(a) + w2.mm(b)
             subset[name].weight.data = w0
 
-
-            # import torch
-            # m, n = W.shape
-            # r, k = 16, 16
-            # # Given matrices
-            # a = torch.rand(r, n)
-            # b = torch.rand(k, n)
-
-            # # Concatenate a and b horizontally
-            # c = torch.cat((a, b), dim=0)
-
-            # # Solve for w1 and w2 using least squares
-            # w_combined, _ = torch.linalg.lstsq(W, c)
-            # w1 = w_combined[:r, :]
-            # w2 = w_combined[r:r+k, :]
 
 
         
