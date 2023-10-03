@@ -184,7 +184,7 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
             for epoch in range(epochs):
                 optimizer.zero_grad()
                 output = model(a, b)
-                loss = criterion(output.t(), W)
+                loss = criterion(output, W)
                 loss.backward()
                 optimizer.step()
                 
