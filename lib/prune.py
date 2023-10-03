@@ -132,19 +132,20 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
 
             # Define the model
             class MatrixFactorization(nn.Module):
-                def __init__(self, m, r, k, n):
+                def __init__(self, m, r, k, n, dtype):
                     super(MatrixFactorization, self).__init__()
-                    self.w1 = nn.Parameter(torch.randn(m, r))
-                    self.w2 = nn.Parameter(torch.randn(m, k))
+                    self.w1 = nn.Parameter(torch.randn(m, r, dtype = dtype))
+                    self.w2 = nn.Parameter(torch.randn(m, k, dtype = dtype))
                     
                 def forward(self, a, b):
                     return torch.mm(self.w1, a) + torch.mm(self.w2, b)
 
             m, n = W.shape
             r, k = 16, 16
-            model = MatrixFactorization(m, r, k, n)
-            a = torch.rand(r, n)
-            b = torch.rand(k, n)
+            model = MatrixFactorization(m, r, k, n, dtype=W.dtype).to('cuda:0')
+            model.train()
+            a = torch.rand(r, n, dtype=W.dtype).to('cuda:0')
+            b = torch.rand(k, n, dtype=W.dtype)
 
             # Define loss and optimizer
             criterion = nn.MSELoss()
