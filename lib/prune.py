@@ -208,12 +208,12 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
             b = torch.rand(k, n, dtype=W.dtype).to('cuda:0')
 
             # Concatenate a and b vertically
-            c = torch.cat((a.t(), b.t()), dim=0)
+            c = torch.cat((a, b), dim=0).t()
 
             # Solve for w1 and w2 using least squares
-            w_combined = torch.linalg.lstsq(c.to(torch.float32), W.t().to(torch.float32)).solution.to(dtype)
-            w1 = w_combined[:, :r].t()
-            w2 = w_combined[:, r:].t()
+            w_combined = torch.linalg.lstsq(c.to(torch.float32), W.t().to(torch.float32)).solution.to(dtype).t()
+            w1 = w_combined[:, :r]
+            w2 = w_combined[:, r:]
             w0 = w1.mm(a) + w2.mm(b)
             subset[name].weight.data = w0
             criterion = nn.MSELoss()
