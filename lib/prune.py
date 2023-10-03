@@ -195,8 +195,11 @@ def prune_magnitude(args, model, tokenizer, device=torch.device("cuda:0"), prune
             w1_learned = model.w1.detach()
             w2_learned = model.w2.detach()
 
-        w0 = w1_learned.mm(a) + w2_learned.mm(b)
-        subset[name].weight.data = w0.copy()
+            w0 = w1_learned.mm(a) + w2_learned.mm(b)
+            subset[name].weight.data = w0.copy()
+
+
+        
 
 def prune_wanda(args, model, tokenizer, device=torch.device("cuda:0"), prune_n=0, prune_m=0):
     use_cache = model.config.use_cache 
